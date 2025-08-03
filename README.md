@@ -45,13 +45,3 @@ Add this to your project's pubspec.yaml file:
 1. yaml
 dependencies:
   product_personaliser: ^1.0.0  # Check pub.dev for latest version
-2. Install Package
-Run this command in your terminal:
-
-# bash
-flutter pub get
-3. Import in Your Code
-Add this import to your Dart files:
-
-dart
-import 'package:product_personaliser/product_personaliser.dart';
