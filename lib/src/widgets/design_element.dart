@@ -197,6 +197,7 @@ class _AreaElementEditorState extends State<AreaElementEditor> {
                           children: [
                             ...widget.areaList.map((element) => 
                               element!.isActive.value?DraggableResizableBox(
+                                
                                 key: ValueKey(element.id),
                                 x: element.x,
                                 y: element.y,
@@ -204,9 +205,9 @@ class _AreaElementEditorState extends State<AreaElementEditor> {
                                 width: element.width,
                                 height: element.height,
                                 isSelected: element == widget.selectedElement.value,
-                                child: Tools.buildElementContent(element),
                                 onTap: () => widget.selectedElement.value = element,
                                 scale: scale,
+                                child: Tools.buildElementContent(element),
                               ):SizedBox.shrink(),
                             ),
                           ],

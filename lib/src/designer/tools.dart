@@ -218,52 +218,18 @@ class Tools {
     Colors.white,
   ];
 
-  final List<FontWeight> fontWeightOptions = [
-    FontWeight.w100,
-    FontWeight.w200,
-    FontWeight.w300,
-    FontWeight.w400,
-    FontWeight.w500,
-    FontWeight.w600,
-    FontWeight.w700,
-    FontWeight.w800,
-    FontWeight.w900,
-  ];
+  // final List<FontWeight> fontWeightOptions = [
+  //   FontWeight.w100,
+  //   FontWeight.w200,
+  //   FontWeight.w300,
+  //   FontWeight.w400,
+  //   FontWeight.w500,
+  //   FontWeight.w600,
+  //   FontWeight.w700,
+  //   FontWeight.w800,
+  //   FontWeight.w900,
+  // ];
 
-  Widget _toolBox(
-    IconData icon,
-    String label,
-    Color bgColor, {
-    bool bold = false,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 20, color: Colors.black),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                fontSize: 12,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   await showModalBottomSheet(
     showDragHandle: true,

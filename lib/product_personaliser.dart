@@ -1,4 +1,4 @@
-library product_personaliser;
+
 
 // Designer
 export 'src/designer/create_template.dart';
