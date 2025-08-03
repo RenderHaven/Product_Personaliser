@@ -1,8 +1,9 @@
 name: product_personaliser
 description: A Flutter package for customizing and personalizing products.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/RenderHaven/Product_Personaliser.git
 repository: https://github.com/RenderHaven/Product_Personaliser.git
+homepage: https://product-personaliser-live-demo.vercel.app/
 
 environment:
   sdk: ^3.8.0
