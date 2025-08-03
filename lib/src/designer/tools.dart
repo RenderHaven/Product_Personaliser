@@ -123,7 +123,6 @@ class Tools {
 
   static void showTopMessage(BuildContext context, String message,{Color color=Colors.black}) {
   final overlay = Overlay.of(context, rootOverlay: true);
-  if (overlay == null) return;
   late OverlayEntry overlayEntry;
 
   overlayEntry = OverlayEntry(
@@ -190,8 +189,6 @@ class Tools {
 }) async {
   String selectedFont = textWidget?.font.value ?? 'Roboto';
   String inputText = textWidget?.title.value ?? 'Aa';
-  bool showFontList = false;
-  bool showColorList = false;
   Color selectedColor = textWidget?.color.value ?? Colors.black;
   double fontSize = textWidget?.size?.value ?? 20.0;
   FontWeight fontWeight = textWidget?.weight.value ?? FontWeight.normal;

@@ -238,8 +238,12 @@ double _calculateFitScale({
 }
 
   void _editElement(DesignElement element){
-    if(element.type.value==ElementType.text)_editText(element);
-    else _uploadImage(element:element);
+    if(element.type.value==ElementType.text){
+      _editText(element);
+    }
+    else {
+      _uploadImage(element:element);
+    }
   }
 
   void _editText(DesignElement element) {
