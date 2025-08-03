@@ -12,13 +12,13 @@ A Flutter package to enable **product personalization**. Easily integrate a dyna
 </p>
 
 <p align="center">
-  <img src="assets/preview4.png">
+  <img src="assets/Preview4.png">
 </p>
 <p align="center">
-  <img src="assets/preview3.png">
+  <img src="assets/Preview3.png">
 </p>
 <p align="center">
-  <img src="assets/preview5.png">
+  <img src="assets/Preview5.png">
 </p>
 
 ---
