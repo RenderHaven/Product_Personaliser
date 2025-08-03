@@ -2,7 +2,6 @@ library product_personaliser;
 
 // Designer
 export 'src/designer/create_template.dart';
-export 'src/designer/page_editor.dart';
 export 'src/designer/product_designer.dart';
 export 'src/designer/tamplate_editor.dart';
 export 'src/designer/tools.dart';

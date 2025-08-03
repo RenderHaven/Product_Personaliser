@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:get/state_manager.dart';
-import 'package:google_fonts/google_fonts.dart';
 import './tools.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -1042,7 +1039,7 @@ Widget _buildNextButton() {
     return null;
   }
 
-  final zipBytes = Uint8List.fromList(ZipEncoder().encode(archive)!);
+  final zipBytes = Uint8List.fromList(ZipEncoder().encode(archive));
   return zipBytes;
 }
 
@@ -1083,9 +1080,9 @@ Future<Uint8List?> _createZipAndDownload(BuildContext context) async {
     if (kIsWeb) {
       final blob = html.Blob([Uint8List.fromList(zipData)], 'application/zip');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'design_pages_${DateTime.now().millisecondsSinceEpoch}.zip')
-        ..click();
+      // final anchor = html.AnchorElement(href: url)
+      //   ..setAttribute('download', 'design_pages_${DateTime.now().millisecondsSinceEpoch}.zip')
+      //   ..click();
       html.Url.revokeObjectUrl(url);
       
       scaffoldMessenger.showSnackBar(

@@ -1,4 +1,3 @@
-import 'package:example/Templates.dart';
 import 'package:flutter/material.dart';
 import "package:product_personaliser/product_personaliser.dart";
 void main() {

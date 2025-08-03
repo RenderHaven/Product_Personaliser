@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import '../../product_personaliser.dart';
-import '../designer/product_designer.dart';
-import '../models/design_templates.dart';
 import 'dart:html' as html;
-import 'create_template.dart';
-import 'package:flutter/services.dart';
 
 class TemplateEditor extends StatefulWidget {
   final DesignTemplate? initialTemplate;
@@ -666,40 +662,6 @@ class _TemplateEditorState extends State<TemplateEditor> {
     ),
   );
 }
-
-  Widget _buildAddAreaButton(ThemeData theme) {
-    return ActionChip(
-      avatar: const Icon(Icons.add, size: 18),
-      label: const Text('Add Area'),
-      onPressed: _addNewArea,
-      backgroundColor: theme.colorScheme.surfaceVariant,
-    );
-  }
-
-  Widget _buildAreaChip(ElementArea area, ThemeData theme) {
-    final isSelected = selectedArea == area;
-    return InputChip(
-      label: Text('Area ${area.id.split('_').last}'),
-      selected: isSelected,
-      onPressed: () => setState(() => selectedArea = area),
-      onDeleted: () {
-        setState(() {
-          currentPage!.elementAreas.remove(area);
-          area.dispose();
-          if (selectedArea == area) selectedArea = null;
-        });
-      },
-      deleteIcon: const Icon(Icons.close, size: 16),
-      showCheckmark: false,
-      selectedColor: theme.colorScheme.primaryContainer,
-      backgroundColor: theme.colorScheme.surfaceVariant,
-      labelStyle: TextStyle(
-        color: isSelected 
-            ? theme.colorScheme.onPrimaryContainer 
-            : theme.colorScheme.onSurface,
-      ),
-    );
-  }
 
   Future<void> _saveTemplate() async {
     if (isSaving) return;

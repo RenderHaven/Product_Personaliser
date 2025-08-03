@@ -197,7 +197,7 @@ class _AreaElementEditorState extends State<AreaElementEditor> {
                           children: [
                             ...widget.areaList.map((element) => 
                               element!.isActive.value?DraggableResizableBox(
-                                key: ValueKey(element!.id),
+                                key: ValueKey(element.id),
                                 x: element.x,
                                 y: element.y,
                                 isDesign: true,
@@ -372,7 +372,9 @@ double _calculateFitScale({
             height: min(50, widget.height),
             imageUrl: base64Image
           );
-          if(element==null)widget.areaList.add(widget.selectedElement.value);
+          if(element==null){
+            widget.areaList.add(widget.selectedElement.value);
+          }
           else{
             widget.selectedElement.value?.imageUrl?.value=base64Image;
           }
