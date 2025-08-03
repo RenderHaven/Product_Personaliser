@@ -4,6 +4,7 @@ import '../designer/product_designer.dart';
 import '../models/design_templates.dart';
 import 'dart:html' as html;
 import 'create_template.dart';
+import 'package:flutter/services.dart';
 
 class TemplateEditor extends StatefulWidget {
   final DesignTemplate? initialTemplate;
@@ -16,7 +17,7 @@ class TemplateEditor extends StatefulWidget {
 
 class _TemplateEditorState extends State<TemplateEditor> {
   late DesignTemplate template;
-  late DesignPage currentPage;
+  late DesignPage? currentPage;
   ElementArea? selectedArea;
   bool isSaving = false;
 
@@ -37,7 +38,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
 
       if (file.size > maxSizeInBytes) {
         // You can use a snackbar, dialog, or other UI warning here
-        print('File too large. Max size is 2MB.');
+        Tools.showTopMessage(context,"File Should Be Small",color: Colors.red);
         return;
       }
       final reader = html.FileReader();
@@ -47,7 +48,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
         final base64Image = reader.result;
         if (base64Image != null && base64Image is String) {
           setState(() {
-            currentPage.bgImageUrl = base64Image;
+            if(currentPage!=null)currentPage!.bgImageUrl = base64Image;
           });
         }
       });
@@ -228,7 +229,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
 
   void _addNewArea() {
     final newArea = ElementArea(
-      id: 'area_${currentPage.elementAreas.length + 1}',
+      id: 'area_${currentPage!.elementAreas.length + 1}',
       x: 100,
       y: 100,
       width: 200,
@@ -236,7 +237,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
     );
 
     setState(() {
-      currentPage.elementAreas.add(newArea);
+      currentPage!.elementAreas.add(newArea);
       selectedArea = newArea;
     });
   }
@@ -250,426 +251,343 @@ class _TemplateEditorState extends State<TemplateEditor> {
         : DesignPage(name: "Dummy", elementAreas: []);
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: templateEditorAppBar(),
+      appBar: _buildAppBar(theme),
       body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 500),
-          child: SingleChildScrollView(
-            physics: ClampingScrollPhysics(),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 50,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    children: [
-                      for (final page in template.pages)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            showCheckmark: false,
-                            label: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  spacing: 5,
-                                  children: [
-                                    Text(page.name),
-                                    if (page.group != null)
-                                      CircleAvatar(
-                                        backgroundColor: Tools.tryParseColor(
-                                          page.group,
-                                        ),
-                                        radius: 10,
-                                      ),
-                                  ],
-                                ),
-                                Text(
-                                  "${page.price} rs",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            selected: page == currentPage,
-                            onSelected: (_) async {
-                              if (currentPage == page) {
-                                final newName = await _showPageRenameDialog(
-                                  context,
-                                  page.name,
-                                  page.price,
-                                  page.group,
-                                );
-                                if (newName != null && newName.length == 3) {
-                                  setState(() {
-                                    page.name = newName[0];
-                                    page.price = newName[1];
-                                    page.group = newName[2];
-                                  });
-                                }
-                              } else
-                                setState(() => currentPage = page);
-                            },
-                            selectedColor: Colors.blue.shade100,
-                            backgroundColor: Colors.grey.shade200,
-                          ),
-                        ),
-
-                      // Add Page Button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: ActionChip(
-                          label: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, size: 18),
-                              SizedBox(width: 4),
-                              Text('Add Page'),
-                            ],
-                          ),
-                          onPressed: _addNewPage,
-                          backgroundColor: Colors.green.shade100,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                MasterActions(),
-                Center(
+        child: SingleChildScrollView(
+          physics: ClampingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildPageSelectionRow(theme),
+              SizedBox(height: 5,),
+              Center(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
                   child: Container(
                     height: 500,
                     width: 400,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black26),
                       image: DecorationImage(
-                        image: NetworkImage(currentPage.bgImageUrl),
+                        image: NetworkImage(currentPage?.bgImageUrl??''),
                         fit: BoxFit.cover,
                       ),
                     ),
-                    child: Stack(
-                      children: currentPage.elementAreas.map((area) {
-                        final isSelected = selectedArea == area;
-
-                        return _buildControllerBox(
-                          area: area,
-                          isSelected: isSelected,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 80,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        ...currentPage.elementAreas.map((a) {
-                          final isSelected = a == selectedArea;
-                          return Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                child: ChoiceChip(
-                                  showCheckmark: false,
-                                  label: Text("Area ${a.id}"),
-                                  selected: isSelected,
-                                  onSelected: (_) =>
-                                      setState(() => selectedArea = a),
-                                  selectedColor: Colors.blue.shade200,
-                                  backgroundColor: Colors.grey.shade200,
-                                ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      currentPage.elementAreas.remove(a);
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 24,
-                                    height: 24,
-                                    alignment: Alignment.center,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      border: Border.fromBorderSide(
-                                        BorderSide(color: Colors.blue),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      '✕',
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }),
-
-                        // Add Area Chip
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ActionChip(
-                            label: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add, size: 18),
-                                SizedBox(width: 4),
-                                Text('Add Area'),
-                              ],
+                    child:currentPage!=null? Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior
+                              .translucent, // So taps pass through empty areas
+                          onTap: () {
+                            setState(() {
+                              selectedArea = null; // or anything you want to do
+                            });
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        left: 5,
+                        top: 5,
+                        child: Tooltip(
+                          message: 'Change Background',
+                          child: IconButton(
+                            icon: Icon(Icons.image_outlined, size: 24),
+                            color: theme.colorScheme.onSurface,
+                            onPressed: _uploadImage,
+                            style: IconButton.styleFrom(
+                              backgroundColor: theme.colorScheme.surfaceVariant,
+                              padding: const EdgeInsets.all(12),
                             ),
-                            onPressed: _addNewArea,
-                            backgroundColor: Colors.green.shade100,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Positioned(
+                        right: 5,
+                        top: 5,
+                        child: Tooltip(
+                          message: 'Add Area',
+                          child: IconButton(
+                            icon: Icon(Icons.add, size: 24),
+                            color: theme.colorScheme.onSurface,
+                            onPressed: _addNewArea,
+                            style: IconButton.styleFrom(
+                              backgroundColor: theme.colorScheme.surfaceVariant,
+                              padding: const EdgeInsets.all(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 5,
+                        bottom: 5,
+                        child: Tooltip(
+                          message: 'Delete Page',
+                          child: IconButton(
+                            icon: Icon(Icons.delete, size: 24),
+                            color: theme.colorScheme.onSurface,
+                            onPressed:(){
+                              if (template.pages.length > 1) {
+                                setState(() {
+                                  template.pages.remove(currentPage);
+                                  currentPage = template.pages.first;
+                                  selectedArea = null;
+                                });
+                              } else {
+                                Tools.showTopMessage(context,'Cannot delete the only page.',color: Colors.red);
+                              }
+                            } ,
+                            style: IconButton.styleFrom(
+                              backgroundColor: theme.colorScheme.surfaceVariant,
+                              padding: const EdgeInsets.all(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      ...currentPage!.elementAreas.map((area) {
+                      
+                      return DraggableResizableBox(x: area.x, y: area.y, width: area.width, height: area.height, isSelected: selectedArea == area,
+                        onTap: () => setState(() {
+                          if(selectedArea!=area)selectedArea=area;
+                        }),
+                      );
+                      // return _buildElementArea(
+                      //   area,
+                      //   isSelected,
+                      // );
+                    })],
+                  ):Text('No Page'),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildControllerBox({
-    bool isSelected = false,
-    required ElementArea area,
-  }) {
-    return Positioned(
-      left: area.x,
-      top: area.y,
-      width: area.width,
-      height: area.height,
-      child: Stack(
-        children: [
-          PanBlocker(
-            onTap: () => setState(() => selectedArea = area),
-            onPanUpdate: (d) {
-              if (selectedArea != area) return;
-              setState(() {
-                area.x += d.delta.dx;
-                area.y += d.delta.dy;
-              });
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.grey,
-                  width: 2,
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: BorderRadius.circular(4),
               ),
-              child: const SizedBox.expand(),
-            ),
+              _buildElementAreasList(theme)
+            ],
           ),
-
-          // Resize handles
-          if (isSelected) ..._buildResizeHandles(area),
-        ],
+        ),
       ),
     );
   }
 
-  List<Widget> _buildResizeHandles(ElementArea area) {
-    Widget box = Container(
-      height: 15,
-      width: 15,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black),
-      ),
-    );
-    return [
-      // Bottom-right handle
-      Positioned(
-        right: 0,
-        bottom: 0,
-        child: PanBlocker(
-          onPanUpdate: (d) {
-            setState(() {
-              area.width += d.delta.dx;
-              area.height += d.delta.dy;
-            });
-          },
-          child: box,
-        ),
-      ),
-      // Bottom-left handle
-      Positioned(
-        left: 0,
-        bottom: 0,
-        child: PanBlocker(
-          onPanUpdate: (d) {
-            setState(() {
-              area.x += d.delta.dx;
-              area.width -= d.delta.dx;
-              area.height += d.delta.dy;
-            });
-          },
-          child: box,
-        ),
-      ),
-      // Top-right handle
-      Positioned(
-        right: 0,
-        top: 0,
-        child: PanBlocker(
-          onPanUpdate: (d) {
-            setState(() {
-              area.y += d.delta.dy;
-              area.height -= d.delta.dy;
-              area.width += d.delta.dx;
-            });
-          },
-          child: box,
-        ),
-      ),
-      // Top-left handle
-      Positioned(
-        left: 0,
-        top: 0,
-        child: PanBlocker(
-          onPanUpdate: (d) {
-            setState(() {
-              area.x += d.delta.dx;
-              area.y += d.delta.dy;
-              area.width -= d.delta.dx;
-              area.height -= d.delta.dy;
-            });
-          },
-          child: box,
-        ),
-      ),
-    ];
-  }
-
-  Widget MasterActions() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          TextButton.icon(
-            onPressed: () => _uploadImage(),
-            icon: const Icon(Icons.image, color: Colors.blue),
-            label: const Text(
-              'Background',
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              setState(() {
-                currentPage.elementAreas.clear();
-                selectedArea = null;
-              });
-            },
-            icon: const Icon(Icons.cleaning_services, color: Colors.orange),
-            label: const Text('Clear', style: TextStyle(color: Colors.orange)),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              if (template.pages.length > 1) {
-                setState(() {
-                  template.pages.remove(currentPage);
-                  currentPage = template.pages.first;
-                  selectedArea = null;
-                });
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cannot delete the only page.')),
-                );
-              }
-            },
-            icon: const Icon(Icons.delete, color: Colors.red),
-            label: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  PreferredSizeWidget templateEditorAppBar() {
+  PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 2,
-      title: TextButton.icon(
-        onPressed: () async {
+      title: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
           final newName = await _showRenameDialog(context, template.name);
           if (newName != null && newName.isNotEmpty) {
-            setState(() {
-              template.name = newName;
-            });
+            setState(() => template.name = newName);
           }
         },
-        icon: const Icon(Icons.edit, color: Colors.black),
-        label: Text(
-          template.name,
-          style: const TextStyle(color: Colors.black, fontSize: 18),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.edit_note, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                template.name,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
-        TextButton.icon(
-          onPressed: () async {
-            if (isSaving) return;
-            if (widget.onSave != null) {
-              setState(() {
-                isSaving = true;
-              });
-
-              // showDialog(
-              //   context: context,
-              //   barrierDismissible: false,
-              //   builder: (BuildContext context) {
-              //     return const AlertDialog(
-              //       content: Row(
-              //         children: [
-              //           CircularProgressIndicator(),
-              //           SizedBox(width: 20),
-              //           Text("Saving..."),
-              //         ],
-              //       ),
-              //     );
-              //   },
-              // );
-
-              // Slight delay to ensure dialog is rendered
-              // Now perform the save
-              await widget.onSave!();
-              // Close the current screen
-              Navigator.of(context).pop(); // Pops the TemplateEditor
-            } else {
-              Navigator.of(context).pop(); // If onSave is null, just close
-            }
-          },
-
-          icon: const Icon(Icons.save, color: Colors.green),
-          label: Text(
-            isSaving ? 'Saving...' : 'Save',
-            style: TextStyle(color: Colors.green),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: FilledButton.icon(
+            onPressed: _saveTemplate,
+            icon: isSaving
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  )
+                : const Icon(Icons.save_outlined, size: 20),
+            label: const Text('Save'),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
           ),
         ),
       ],
     );
   }
+
+  Widget _buildPageSelectionRow(ThemeData theme) {
+    return SizedBox(
+        height: 50,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (final page in template.pages)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ChoiceChip(
+                  showCheckmark: false,
+                  selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                  label: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        spacing: 5,
+                        children: [
+                          Text(page.name),
+                          if (page.group != null)
+                            CircleAvatar(
+                              backgroundColor: Tools.tryParseColor(
+                                page.group,
+                              ),
+                              radius: 10,
+                            ),
+                        ],
+                      ),
+                      Text(
+                        "${page.price} rs",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  selected: page == currentPage,
+                  onSelected: (_) async {
+                    if (currentPage == page) {
+                      final newName = await _showPageRenameDialog(
+                        context,
+                        page.name,
+                        page.price,
+                        page.group,
+                      );
+                      if (newName != null && newName.length == 3) {
+                        setState(() {
+                          page.name = newName[0];
+                          page.price = newName[1];
+                          page.group = newName[2];
+                        });
+                      }
+                    } else
+                      setState(() => currentPage = page);
+                  },
+                  
+                  backgroundColor: Colors.grey.shade200,
+                ),
+              ),
+
+            // Add Page Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: ActionChip(
+                label: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, size: 18),
+                    SizedBox(width: 4),
+                    Text('Add Page'),
+                  ],
+                ),
+                onPressed: _addNewPage,
+                backgroundColor: Colors.green.shade100,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+  Widget _buildElementAreasList(ThemeData theme) {
+    return SizedBox(
+      height: 72,
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            children: [
+              const Text('Elements:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: currentPage!.elementAreas.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    if (index == currentPage!.elementAreas.length) {
+                      return _buildAddAreaButton(theme);
+                    }
+                    final area = currentPage!.elementAreas[index];
+                    return _buildAreaChip(area, theme);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddAreaButton(ThemeData theme) {
+    return ActionChip(
+      avatar: const Icon(Icons.add, size: 18),
+      label: const Text('Add Area'),
+      onPressed: _addNewArea,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+    );
+  }
+
+  Widget _buildAreaChip(ElementArea area, ThemeData theme) {
+    final isSelected = selectedArea == area;
+    return InputChip(
+      label: Text('Area ${area.id.split('_').last}'),
+      selected: isSelected,
+      onPressed: () => setState(() => selectedArea = area),
+      onDeleted: () {
+        setState(() {
+          currentPage!.elementAreas.remove(area);
+          area.dispose();
+          if (selectedArea == area) selectedArea = null;
+        });
+      },
+      deleteIcon: const Icon(Icons.close, size: 16),
+      showCheckmark: false,
+      selectedColor: theme.colorScheme.primaryContainer,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+      labelStyle: TextStyle(
+        color: isSelected 
+            ? theme.colorScheme.onPrimaryContainer 
+            : theme.colorScheme.onSurface,
+      ),
+    );
+  }
+
+  Future<void> _saveTemplate() async {
+    if (isSaving) return;
+    setState(() => isSaving = true);
+    
+    try {
+      await widget.onSave?.call();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isSaving = false);
+      }
+    }
+  }
+
+  // ... (keep all your existing dialog methods)
 }

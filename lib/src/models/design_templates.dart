@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'design_elements.dart';
 
@@ -27,7 +28,6 @@ class DesignTemplate {
 
   /// ✅ Create template from minimal user-provided data
   factory DesignTemplate.fromData(Map<String, dynamic> data) {
-    print(data);
     final String templateId = data['id'] ?? 'NA';
     final String name = data['name'] ?? 'Unnamed Template';
 
@@ -86,10 +86,10 @@ class DesignTemplate {
             'elementAreas': p.elementAreas
                 .map(
                   (e) => {
-                    'x': e.x,
-                    'y': e.y,
-                    'width': e.width,
-                    'height': e.height,
+                    'x': e.x.value,
+                    'y': e.y.value,
+                    'width': e.width.value,
+                    'height': e.height.value,
                   },
                 )
                 .toList(),
@@ -111,8 +111,7 @@ class DesignPage {
   DesignPage({
     // required this.id,
     required this.name,
-    this.bgImageUrl =
-        'https://www.teez.in/cdn/shop/products/flutter-developer-T-Shier-For-Men_s-5_large.jpg?v=1587186607',
+    this.bgImageUrl ="",
     required this.elementAreas,
     this.price = '0',
     this.group,
@@ -139,32 +138,68 @@ class DesignPage {
 
 class ElementArea {
   final String id;
-  double x;
-  double y;
-  double width;
-  double height;
-  DesignElement? subElement;
 
+  /// Reactive fields
+  final RxDouble x;
+  final RxDouble y;
+  final RxDouble width;
+  final RxDouble height;
+
+  /// Reactive list of sub-elements
+  final RxList<DesignElement> subElements = <DesignElement>[].obs;
   final GlobalKey repaintKey = GlobalKey();
 
   ElementArea({
     required this.id,
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    this.subElement,
-  });
+    required double x,
+    required double y,
+    required double width,
+    required double height,
+    List<DesignElement>? initialSubElements,
+  })  : x = RxDouble(x),
+        y = RxDouble(y),
+        height = RxDouble(height),
+        width = RxDouble(width) {
+    if (initialSubElements != null) {
+      subElements.addAll(initialSubElements);
+    }
+  }
 
+  /// Add a sub-element
+  void addSubElement(DesignElement element) {
+    subElements.add(element);
+  }
+
+  /// Remove a sub-element
+  bool removeSubElement(String elementId) {
+    final element = getSubElement(elementId);
+    if (element != null) {
+      element.dispose(); // Dispose the element before removing
+      return subElements.remove(element);
+    }
+    return false;
+  }
+
+  /// Get a sub-element by ID
+  DesignElement? getSubElement(String elementId) {
+    try {
+      return subElements.firstWhere((element) => element.id == elementId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// For serialization: Convert to non-reactive types
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'x': x,
-    'y': y,
-    'width': width,
-    'height': height,
-    'subElement': subElement?.toJson(),
-  };
+        'id': id,
+        'x': x.value,
+        'y': y.value,
+        'width': width.value,
+        'height': height.value,
+        'subElements': subElements.map((e) => e.toJson()).toList(),
+      };
 
+  /// Deserialize and wrap values in Rx types
   factory ElementArea.fromJson(Map<String, dynamic> json) {
     return ElementArea(
       id: json['id'],
@@ -172,9 +207,25 @@ class ElementArea {
       y: json['y']?.toDouble() ?? 0,
       width: json['width']?.toDouble() ?? 100,
       height: json['height']?.toDouble() ?? 100,
-      subElement: json['subElement'] != null
-          ? DesignElement.fromJson(json['subElement'])
-          : null,
+      initialSubElements: (json['subElements'] as List<dynamic>?)
+          ?.map((e) => DesignElement.fromJson(e))
+          .toList(),
     );
   }
+
+  /// Clean up all Rx observables when the area is no longer needed
+  void dispose() {
+    // Dispose all sub-elements first
+    for (final element in subElements) {
+      element.dispose();
+    }
+    subElements.close(); // Close the RxList
+    
+    // Dispose individual Rx properties
+    x.close();
+    y.close();
+    width.close();
+    height.close();
+  }
 }
+
