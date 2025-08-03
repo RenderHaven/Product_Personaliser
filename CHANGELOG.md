@@ -1,2 +1,2 @@
-## [0.1.0]
-- Initial release: Added interactive personaliser widget with support for custom design areas.
+## [0.1.1]
+- Added interactive personaliser widget with support for custom design areas.
