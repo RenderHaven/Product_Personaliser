@@ -6,15 +6,19 @@ A Flutter package to enable **product personalization**. Easily integrate a dyna
 <!-- [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/yourusername/product_personaliser/blob/main/LICENSE) -->
 [![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.0.0-blue)](https://flutter.dev)
 
-<p>
-  <img src="assets/preview1.png" width="50%">
-  <img src="assets/preview2.png" width="50%">
+<p align="center">
+  <img src="assets/preview1.png" alt="Preview 1" style="width: 48%; display: inline-block; margin-right: 1%;">
+  <img src="assets/preview2.png" alt="Preview 2" style="width: 48%; display: inline-block;">
+</p>
+
+<p align="center">
+  <img src="assets/preview4.png">
 </p>
 <p align="center">
   <img src="assets/preview3.png">
 </p>
 <p align="center">
-  <img src="assets/preview4.png" width="50%">
+  <img src="assets/preview5.png">
 </p>
 
 ---
