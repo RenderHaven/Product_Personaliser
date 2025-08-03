@@ -75,7 +75,7 @@ class _ProductDesignerState extends State<ProductDesigner> {
                           
                           // Main content area
                           if (_currentStep.value == 1) _buildColorSelector(groups),
-                          if (_currentStep.value != 1) _buildMainBody(context),
+                          if (_currentStep.value != 1) ConstrainedBox(constraints: BoxConstraints(maxWidth: 1000), child: _buildMainBody(context)),
                           
                           // Action buttons
                           

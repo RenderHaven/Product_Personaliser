@@ -34,6 +34,7 @@ class _AreaElementEditorState extends State<AreaElementEditor> {
   Widget build(BuildContext context) {
     return Container(
       // width: 300,
+      
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
