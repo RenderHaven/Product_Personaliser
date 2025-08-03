@@ -30,18 +30,10 @@ Add this to your project's pubspec.yaml file:
 dependencies:
   product_personaliser: ^1.0.0  # Check pub.dev for latest version
 
-## ShowCase
-<p align="center">
-  <img src="assets/preview1.png" alt="Preview 1" style="width: 48%; display: inline-block; margin-right: 1%;">
-  <img src="assets/preview2.png" alt="Preview 2" style="width: 48%; display: inline-block;">
-</p>
+## 📸 ShowCase
 
-<p align="center">
-  <img src="assets/Preview4.png">
-</p>
-<p align="center">
-  <img src="assets/Preview3.png">
-</p>
-<p align="center">
-  <img src="assets/Preview5.png">
-</p>
+| | |
+|--|--|
+| ![Preview1](assets/preview1.png) | ![Preview2](assets/preview2.png) |
+| ![Preview4](assets/Preview4.png) | ![Preview3](assets/Preview3.png) |
+| ![Preview5](assets/Preview5.png) | |
