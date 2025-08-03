@@ -1,3 +1,2 @@
-## 0.0.1
-
-* TODO: Describe initial release.
+## [0.1.0]
+- Initial release: Added interactive personaliser widget with support for custom design areas.

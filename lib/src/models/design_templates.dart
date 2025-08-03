@@ -40,7 +40,7 @@ class DesignTemplate {
       final String pageName = pageData['name'] ?? 'Unnamed Page';
       final String bgImageUrl = pageData['bgImageUrl'] ?? '';
       final String price = pageData['price'] ?? '0';
-      final group = pageData['group'];
+      final group = pageData['group']??'#FFFFFF';
 
       final List<ElementArea> elementAreas = [];
       final List<dynamic> areaList = pageData['elementAreas'] ?? [];

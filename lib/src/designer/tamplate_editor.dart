@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
 import '../../product_personaliser.dart';
 import '../designer/product_designer.dart';
 import '../models/design_templates.dart';
@@ -263,6 +264,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
             children: [
               _buildPageSelectionRow(theme),
               SizedBox(height: 5,),
+              
               Center(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -371,153 +373,241 @@ class _TemplateEditorState extends State<TemplateEditor> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(ThemeData theme) {
-    return AppBar(
-      title: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
+ PreferredSizeWidget _buildAppBar(ThemeData theme) {
+  return AppBar(
+    elevation: 0,
+    backgroundColor: theme.appBarTheme.backgroundColor,
+    title: InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () async {
+        final newName = await _showRenameDialog(context, template.name);
+        if (newName != null && newName.isNotEmpty) {
+          setState(() => template.name = newName);
+        }
+      },
+      child:Text(
+            template.name,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+    ),
+    actions: [
+      IconButton(
+        icon: Icon(Icons.edit_outlined, color: theme.colorScheme.onSurface),
+        onPressed: () async {
           final newName = await _showRenameDialog(context, template.name);
           if (newName != null && newName.isNotEmpty) {
             setState(() => template.name = newName);
           }
         },
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.edit_note, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                template.name,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+        tooltip: 'Edit Template Name',
+      ),
+      Padding(
+        padding: const EdgeInsets.only(right: 16),
+        child: FilledButton.icon(
+          onPressed: _saveTemplate,
+          icon: isSaving
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                )
+              : const Icon(Icons.save_outlined, size: 20),
+          label: const Text('Save'),
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: FilledButton.icon(
-            onPressed: _saveTemplate,
-            icon: isSaving
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                  )
-                : const Icon(Icons.save_outlined, size: 20),
-            label: const Text('Save'),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
+    ],
+  );
+}
+
+  Widget _buildPageSelectionRow(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[800] : Colors.grey[200],
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
           ),
         ),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'PAGES',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final page in template.pages)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (currentPage == page) {
+                          final newName = await _showPageRenameDialog(
+                            context,
+                            page.name,
+                            page.price,
+                            page.group,
+                          );
+                          if (newName != null && newName.length == 3) {
+                            setState(() {
+                              page.name = newName[0];
+                              page.price = newName[1];
+                              page.group = newName[2];
+                            });
+                          }
+                        } else {
+                          setState(() => currentPage = page);
+                        }
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: page == currentPage
+                              ? theme.colorScheme.primary.withOpacity(0.1)
+                              : isDark
+                                  ? Colors.grey[700]
+                                  : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: page == currentPage
+                                ? theme.colorScheme.primary
+                                : Colors.transparent,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              page.name,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: page == currentPage
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            if (page.group != null) ...[
+                              const SizedBox(width: 8),
+                              CircleAvatar(
+                                backgroundColor:
+                                    Tools.tryParseColor(page.group),
+                                radius: 8,
+                              ),
+                            ],
+                            const SizedBox(width: 8),
+                            Text(
+                              "${page.price} rs",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: OutlinedButton.icon(
+                    onPressed: _addNewPage,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('New Page'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildPageSelectionRow(ThemeData theme) {
-    return SizedBox(
-        height: 50,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            for (final page in template.pages)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ChoiceChip(
-                  showCheckmark: false,
-                  selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                  label: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        spacing: 5,
-                        children: [
-                          Text(page.name),
-                          if (page.group != null)
-                            CircleAvatar(
-                              backgroundColor: Tools.tryParseColor(
-                                page.group,
-                              ),
-                              radius: 10,
-                            ),
-                        ],
-                      ),
-                      Text(
-                        "${page.price} rs",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                  selected: page == currentPage,
-                  onSelected: (_) async {
-                    if (currentPage == page) {
-                      final newName = await _showPageRenameDialog(
-                        context,
-                        page.name,
-                        page.price,
-                        page.group,
-                      );
-                      if (newName != null && newName.length == 3) {
-                        setState(() {
-                          page.name = newName[0];
-                          page.price = newName[1];
-                          page.group = newName[2];
-                        });
-                      }
-                    } else
-                      setState(() => currentPage = page);
-                  },
-                  
-                  backgroundColor: Colors.grey.shade200,
-                ),
-              ),
-
-            // Add Page Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: ActionChip(
-                label: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add, size: 18),
-                    SizedBox(width: 4),
-                    Text('Add Page'),
-                  ],
-                ),
-                onPressed: _addNewPage,
-                backgroundColor: Colors.green.shade100,
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
   Widget _buildElementAreasList(ThemeData theme) {
-    return SizedBox(
-      height: 72,
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+  final isDark = theme.brightness == Brightness.dark;
+  
+  return Container(
+    height: 72,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    decoration: BoxDecoration(
+      color: isDark ? Colors.grey[800] : Colors.grey[200],
+      border: Border(
+        top: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+      ),
+    ),
+    child: Column(
+      children: [
+        // Dimensions row
+        Container(
+          height: 25,
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isDark ? Colors.grey[500]! : Colors.grey[400]!,
+            ),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child:selectedArea != null? Center(
+            child:Obx(() {
+              return Text('x: ${selectedArea!.x.value.toStringAsFixed(1)} × y: ${selectedArea!.y.value.toStringAsFixed(1)} ( W: ${selectedArea!.width.value.toStringAsFixed(1)} × H: ${selectedArea!.height.value.toStringAsFixed(1)})',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold
+                ),
+              );
+            })
+          ):null,
+        ),
+        // Elements row
+        Expanded(
           child: Row(
             children: [
-              const Text('Elements:', style: TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(width: 8),
+              Text(
+                'ELEMENTS:',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
@@ -525,19 +615,57 @@ class _TemplateEditorState extends State<TemplateEditor> {
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     if (index == currentPage!.elementAreas.length) {
-                      return _buildAddAreaButton(theme);
+                      return OutlinedButton.icon(
+                        onPressed: _addNewArea,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Area'),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
                     }
                     final area = currentPage!.elementAreas[index];
-                    return _buildAreaChip(area, theme);
+                    return FilterChip(
+                      label: Text('Area ${area.id.split('_').last}'),
+                      selected: selectedArea == area,
+                      onSelected: (selected) => setState(() => selectedArea = area),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () {
+                        setState(() {
+                          currentPage!.elementAreas.remove(area);
+                          area.dispose();
+                          if (selectedArea == area) selectedArea = null;
+                        });
+                      },
+                      showCheckmark: false,
+                      selectedColor: theme.colorScheme.primary.withOpacity(0.2),
+                      backgroundColor: isDark ? Colors.grey[700] : Colors.grey[100],
+                      labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: selectedArea == area
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: BorderSide(
+                        color: selectedArea == area
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
+                      ),
+                    );
                   },
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildAddAreaButton(ThemeData theme) {
     return ActionChip(
